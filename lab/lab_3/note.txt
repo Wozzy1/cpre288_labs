@@ -1,0 +1,87 @@
+void perform_scan(cyBOT_Scan_t* scanPtr) {
+    int degrees = 180;
+    fclose(fopen("scan_result.txt", "w"));
+
+    // printing initial header msg
+    char init_msg[50];
+    sprintf(init_msg, "%-15s %-15s\r\n", "Degrees", "Distance (m)");
+    int x = 0;
+    while (init_msg[x]) {
+        cyBot_sendByte(init_msg[x++]);
+    }
+    printf("%s\n", init_msg);
+
+
+    float values[91];
+
+    // begin sweep from 180 to 0
+    while (degrees >= 0) {
+        cyBOT_Scan(degrees, scanPtr);
+
+        values[degrees / 2] = (*scanPtr).sound_dist/100;
+
+//        sprintf(msg, "%-15d %-1.2f", degrees, (*scanPtr).sound_dist/100);
+
+    }
+    int j;
+    for (j = 0; j < 91; j++) {
+        char msg[50];
+
+        int i = 0;
+        while (msg[i]) {
+            cyBot_sendByte(msg[i++]);
+        }
+        cyBot_sendByte('\r');
+        cyBot_sendByte('\n');
+    }
+
+        degrees -= 2;
+
+}
+
+
+
+void perform_scan(cyBOT_Scan_t* scanPtr) {
+    int degrees = 180;
+    fclose(fopen("scan_result.txt", "w"));
+
+    // printing initial header msg
+    char init_msg[50];
+    sprintf(init_msg, "%-15s %-15s\r\n", "Degrees", "Distance (m)");
+    int x = 0;
+    while (init_msg[x]) {
+        cyBot_sendByte(init_msg[x++]);
+    }
+    printf("%s\n", init_msg);
+
+    // begin sweep from 180 to 0
+    while (degrees >= 0) {
+        cyBOT_Scan(degrees, scanPtr);
+        char msg[50];
+
+        
+        sprintf(msg, "%-15d %-1.2f", degrees, (*scanPtr).sound_dist/100);
+
+
+        printf("%s\n", msg);
+
+        int i = 0;
+        while (msg[i]) {
+//            if (msg[i] == '\n') {
+//                cyBot_sendByte('\r');
+//                cyBot_sendByte('\n');
+//            }
+            cyBot_sendByte(msg[i++]);
+        }
+        cyBot_sendByte('\r');
+        cyBot_sendByte('\n');
+
+
+
+
+
+
+        degrees -= 2;
+    }
+
+}

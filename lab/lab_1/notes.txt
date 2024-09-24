@@ -1,0 +1,111 @@
+
+
+
+=====
+    C (20 * 3 spaces)
+   Ca
+  Car
+ Cara
+Carah
+arah
+rah
+ah
+h
+
+    C
+	
+	
+	
+=====
+    L
+   Le
+  Lea
+ Leag
+Leagu
+eague
+ague 
+gue
+ue
+e
+
+    L
+	
+	
+	
+	
+	
+	
+p1,p2 = 0,0;
+
+
+	
+	
+	
+	
+	
+	
+	
+
+	 int firstIndex = 0;
+	 while(1) {
+	     if (firstIndex >= phraseLength) {
+	         firstIndex = 0;
+	     }
+
+//	     printSpaces(firstIndex, length);
+	     
+	     
+	     
+	     lcd_printf(&phrase[firstIndex]);
+	     firstIndex++;
+	     if (firstIndex == 20) {
+	         while (firstIndex < phraseLength) {
+
+	             lcd_printf(&phrase[firstIndex]);
+	              firstIndex++;
+	         }
+	     }
+	     timer_waitMillis(300);
+
+
+	 }
+
+	
+	
+	
+	
+	
+	     char msg[21];
+	     int msgCursor = 20;
+	     int phraseCursor = 0;
+	     int numOfLettersToPrint = 1;
+	     msg[msgCursor] = '\0';
+	     msgCursor--;
+	     while (numOfLettersToPrint < i &&) {
+	         msg[21];
+             while (msgCursor > 0) {
+                 msg[msgCursor] = phrase[phraseCursor];
+                 msgCursor--;
+                 phraseCursor++;
+                 lcd_printf(msg);
+                 timer_waitMillis(300);
+
+             }
+             numOfLettersToPrint++;
+	     }
+	 }
+	
+	
+	
+	
+	
+	
+Carah
+									first letter
+(index%boardLength - num of spaces +1) + index%boardLength to index + index%boardLength - length of word + 60 spaces
+
+after we run out of letters
+
+0 spaces + 
+
+first char is index % strlength
