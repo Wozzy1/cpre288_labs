@@ -12,7 +12,14 @@
 
 void perform_scan(cyBOT_Scan_t* scanPtr);
 void calibrate();
-void smooth_data_inplace(float *data, int *objCount, int *objArr);
+void smooth_data_inplace(float *data);
+
+typedef struct obj_struct {
+    int startAngle;
+    int endAngle;
+    float distance;
+
+} object;
 
 int main(void)
 {
@@ -24,17 +31,9 @@ int main(void)
     lcd_init();
     cyBOT_init_Scan(0b0111);
 
-
     calibrate();
 
     perform_scan(scan_ptr);
-
-
-
-
-
-
-
 	return 0;
 }
 
@@ -66,36 +65,27 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
     }
     printf("%s\n", init_msg);
 
-
     float values[91];
 
-    // begin sweep from 180 to 0
+    // SCAN 180 DEGREE
     while (degrees >= 0) {
         cyBOT_Scan(degrees, scanPtr);
-
         values[90 - (degrees / 2)] = (*scanPtr).sound_dist/100;
-
         degrees -= 2;
-
     }
-
-//    int fk = 0;
-//    for (; fk < 90; fk++) {
-//        printf("%f\n", values[fk]);
-//    }
 
     int objCount = 0;
     int *objCountPtr = &objCount;
 
+    object *ptr = (object*) calloc(1, sizeof(object));
 
-    int objArr[10];
-
-
-    smooth_data_inplace(values, objCountPtr, objArr);
 
     // take average of 5 data points. if current data is outside of threshold,
     // set data to avg
+    smooth_data_inplace(values);
 
+
+    // PRINTING OUTPUTS TO FILE AND CONSOLE
     int j;
     for (j = 0; j < 91; j++) {
         char msg[50];
@@ -110,7 +100,7 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
     }
 
     char debug[50];
-    sprintf(debug, "\nCount: %d", &objCount);
+    sprintf(debug, "\nCount: %d", objCount);
     int i = 0;
     while (debug[i] != '\0') {
         cyBot_sendByte(debug[i++]);
@@ -118,15 +108,15 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
     cyBot_sendByte('\r');
     cyBot_sendByte('\n');
 
+//    for (j = 0; j < 10; j++) {
+//        printf("%d\n", objArr[j]);
+//    }
+
 
 }
 
-void smooth_data_inplace(float *data, int *objCount, int *objArr) {
+void smooth_data_inplace(float *data) {
     int i, j;
-
-    int encounter = 0;
-    int startDegree = 0;
-
     for (i = 0; i < 90; i++) {
         float sum = 0;
         int count = 0;
@@ -141,33 +131,53 @@ void smooth_data_inplace(float *data, int *objCount, int *objArr) {
 
         // perform something on the value at the center of the average
         float avg = sum / count;
-
-
 //        printf("%f / % d = %f\n", sum, count, avg);
-        if (abs(data[i] - avg) > 0.15) {
+        if (abs(data[i] - avg) > 0.20) {
             data[i] = avg;
-            // inc count of objects seen if change in dist > 0.3m
-            if (abs(data[i] - avg) > 0.3) {
-                if (!encounter) {
-                    encounter = 1;
-                    startDegree = i * 2;
-                    (*objCount)++;
-                } else {
-                    encounter = 0;
-                    // recorded object number objCount-1 has angle width of start - stop
-                    objArr[(*objCount) - 1] = startDegree - (i * 2);
-                }
-            }
         } else {
             data[i] = sum / count; // Replace current value with smoothed value
         }
-
-
-//        data[i] = sum / count;
     }
-
 }
 
+
+int countObjects(float* dist, object* objArray) {
+
+    int i, j;
+    int objCount = 0;
+    int opening = 1;
+    for (i = 0; i < 90; i++) {
+        float sum = 0;
+        int count = 0;
+        for (j = i - 1; j <= i + 1; j++) {
+            if (j >= 0 && j < 90) {
+                sum += dist[j];
+                count++;
+            }
+        }
+        float avg = sum / count;
+
+        if (opening && abs(dist[i] - avg) > 0.3) {
+            objArray[objCount].distance = dist[i];
+            objArray[objCount].startAngle = i * 2;
+            opening = 0;
+        }
+        else if (!opening && abs(dist[i] - avg) > 0.3) {
+            objArray[objCount].endAngle = i * 2;
+            objCount++;
+            opening = 1;
+
+            int lengthOfArr = sizeof(objArray) / sizeof(objArray[0]);
+            if (objCount == lengthOfArr) {
+                // do shit
+                // realloc() the array to be bigger
+            }
+        }
+
+    }
+
+    return 0;
+}
 
 
 
