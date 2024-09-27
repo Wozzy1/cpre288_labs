@@ -52,13 +52,11 @@ void calibrate() {
 
 void perform_scan(cyBOT_Scan_t* scanPtr) {
     int degrees = 180;
-    fclose(fopen("scan_result.txt", "w"));
-
-//    fopen("scan_result.txt", "r");
+//    fclose(fopen("scan_result.txt", "w"));
 
     // printing initial header msg
     char init_msg[50];
-    sprintf(init_msg, "%-15s %-15s\r\n", "Degrees", "Distance (m)");
+    sprintf(init_msg, "%-15s %-15s\r\n", "Degrees", "Distance (cm)");
     int x = 0;
     while (init_msg[x]) {
         cyBot_sendByte(init_msg[x++]);
@@ -69,20 +67,28 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
 
     // SCAN 180 DEGREE
     while (degrees >= 0) {
+        float temp = 0;
         cyBOT_Scan(degrees, scanPtr);
-        values[90 - (degrees / 2)] = (*scanPtr).sound_dist/100;
+        temp += (*scanPtr).sound_dist;
+
+        cyBOT_Scan(degrees, scanPtr);
+        temp += (*scanPtr).sound_dist;
+
+        cyBOT_Scan(degrees, scanPtr);
+        temp += (*scanPtr).sound_dist;
+
+        values[90 - (degrees / 2)] = temp / 3;
         degrees -= 2;
     }
 
     int objCount = 0;
-    int *objCountPtr = &objCount;
-
-    object *ptr = (object*) calloc(1, sizeof(object));
+    int* objCountptr = &objCount;
+    object* ptr = (object*) calloc(1, sizeof(object));
 
 
     // take average of 5 data points. if current data is outside of threshold,
     // set data to avg
-    smooth_data_inplace(values);
+//    smooth_data_inplace(values);
 
 
     // PRINTING OUTPUTS TO FILE AND CONSOLE
@@ -97,8 +103,13 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
         }
         cyBot_sendByte('\r');
         cyBot_sendByte('\n');
+        printf("%s\n", msg);
     }
 
+    countObjects(values, ptr, objCountptr);
+
+
+    // PRINTING COUNT TO CONSOLE
     char debug[50];
     sprintf(debug, "\nCount: %d", objCount);
     int i = 0;
@@ -107,11 +118,7 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
     }
     cyBot_sendByte('\r');
     cyBot_sendByte('\n');
-
-//    for (j = 0; j < 10; j++) {
-//        printf("%d\n", objArr[j]);
-//    }
-
+    printf("%s", debug);
 
 }
 
@@ -121,8 +128,8 @@ void smooth_data_inplace(float *data) {
         float sum = 0;
         int count = 0;
 
-        // create sliding window of width 5
-        for (j = i - (2); j <= i + (2); j++) {
+        // create sliding window of width 3
+        for (j = i - (1); j <= i + (1); j++) {
             if (j >= 0 && j < 90) {
                 sum += data[j];
                 count++;
@@ -132,7 +139,7 @@ void smooth_data_inplace(float *data) {
         // perform something on the value at the center of the average
         float avg = sum / count;
 //        printf("%f / % d = %f\n", sum, count, avg);
-        if (abs(data[i] - avg) > 0.20) {
+        if (abs(data[i] - avg) > 20) {
             data[i] = avg;
         } else {
             data[i] = sum / count; // Replace current value with smoothed value
@@ -141,10 +148,9 @@ void smooth_data_inplace(float *data) {
 }
 
 
-int countObjects(float* dist, object* objArray) {
+int countObjects(float* dist, object* objArray, int* objCountptr) {
 
     int i, j;
-    int objCount = 0;
     int opening = 1;
     for (i = 0; i < 90; i++) {
         float sum = 0;
@@ -157,21 +163,29 @@ int countObjects(float* dist, object* objArray) {
         }
         float avg = sum / count;
 
-        if (opening && abs(dist[i] - avg) > 0.3) {
-            objArray[objCount].distance = dist[i];
-            objArray[objCount].startAngle = i * 2;
+        if (abs(dist[i] - avg) > 15) {
+            printf("TEMPPM");
+        }
+
+        if (opening && abs(dist[i] - avg) > 15) {
+            // reallocate more memory - starts at 0, when see first obj inc to size 1
+            objArray[*objCountptr].distance = dist[i];
+            objArray[*objCountptr].startAngle = i * 2;
             opening = 0;
         }
-        else if (!opening && abs(dist[i] - avg) > 0.3) {
-            objArray[objCount].endAngle = i * 2;
-            objCount++;
-            opening = 1;
+        else if (!opening && abs(dist[i] - avg) > 15) {
+            objArray[*objCountptr].endAngle = i * 2;
+            (*objCountptr)++;
 
-            int lengthOfArr = sizeof(objArray) / sizeof(objArray[0]);
-            if (objCount == lengthOfArr) {
-                // do shit
-                // realloc() the array to be bigger
+            object* temp = objArray;
+            objArray = realloc(objArray, ((*objCountptr) + 1) * sizeof(objArray));
+            if (!objArray) {
+                printf("Error with memory reallocation.\n");
+                objArray = temp;
             }
+            opening = 1; // denote end of object
+
+
         }
 
     }

@@ -46,7 +46,7 @@ file_object.close() # Important to close file one you are done with it!!
 for line in file_data: 
     data = line.split()    # Split line into columns (by default delineates columns by whitespace)
     angle_degrees.append(float(data[0]))  # Column 0 holds the angle at which distance was measured
-    distance.append(float(data[1]))       # Column 1 holds the distance that was measured at a given angle       
+    distance.append(float(data[1])/100)       # Column 1 holds the distance that was measured at a given angle       
 
 # Convert python sequence (list of strings) into a numpy array
 angle_degrees = np.array(angle_degrees) # Avoid "TypeError: can't multiply sequence by non-int of type float"
@@ -57,7 +57,7 @@ angle_radians = (np.pi/180) * angle_degrees # Convert degrees into radians
 # Create a polar plot
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}) # One subplot of type polar
 ax.plot(angle_radians, distance, color='r', linewidth=4.0)  # Plot distance verse angle (in radians), using red, line width 4.0
-ax.set_xlabel('Distance (m)', fontsize = 14.0)  # Label x axis
+ax.set_xlabel('Distance (cm)', fontsize = 14.0)  # Label x axis
 ax.set_ylabel('Angle (degrees)', fontsize = 14.0) # Label y axis
 ax.xaxis.set_label_coords(0.5, 0.15) # Modify location of x axis label (Typically do not need or want this)
 ax.tick_params(axis='both', which='major', labelsize=14) # set font size of tick labels

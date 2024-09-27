@@ -1,0 +1,23 @@
+scan()
+
+smooth()
+
+count()
+
+init arr of obstacles
+
+malloc(# of items, # * sizeof(obstacle));
+
+int opening = 1;
+for angle in array:
+  
+  if opening AND change in distance is big:
+    set obstacle #x start angle = angle
+    opening = 0;
+  elif !opening AND change in dist is big:
+    set obstacle #x end angle = angle
+    opening = 1;
+    x++;
+    // dynamic list of obstacles
+    if x == size of array:
+      reallocate memory
