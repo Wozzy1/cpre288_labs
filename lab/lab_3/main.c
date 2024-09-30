@@ -4,10 +4,12 @@
  * main.c
  */
 #include<stdio.h>
+#include "open_interface.h"
 #include"timer.h"
 #include"cyBot_Scan.h"
 #include"cyBot_uart.h"
 #include"scan.h"
+#include"movement.h"
 
 #include"lcd.h"
 
@@ -36,7 +38,7 @@ void printString(char* str) {
 }
 
 int main(void)
-{
+w{
 
 
     cyBOT_Scan_t scanInfo;
@@ -47,7 +49,27 @@ int main(void)
 
     calibrate();
 
-    perform_scan(scan_ptr);
+    oi_t *sensor_data = oi_alloc();
+    oi_init(sensor_data);
+
+    char input = '0x00';
+    while (input != 'q') {
+        perform_scan(scan_ptr);
+        input = cyBot_getByte();
+
+        if (input == 'w') {
+            move_straight_forward(sensor_data, 10);
+        } else if (input == 's') {
+            move_straight_forward(sensor_data, -10);
+        } else if (input == 'd') {
+            turn_clockwise(sensor_data, 10);
+        } else if (input == 'a') {
+            turn_clockwise(sensor_data, -10);
+        }
+
+        oi_setWheels(0, 0);  // stop
+    }
+
 	return 0;
 }
 
@@ -58,73 +80,68 @@ void calibrate() {
     cyBOT_init_Scan(0b0111);
 //    right_calibration_value = 222250; // for bot 4
 //    left_calibration_value = 1172500;
-      right_calibration_value = 348250; // for bot 9
-      left_calibration_value = 1356250;
-    //cyBOT_SERVO_cal();
+//      right_calibration_value = 348250; // for bot 9
+//      left_calibration_value = 1356250;
+      right_calibration_value = 274750; // for bot 1 downstairs
+      left_calibration_value = 1219750;
+
+//    cyBOT_SERVO_cal();
 }
 
 
 void perform_scan(cyBOT_Scan_t* scanPtr) {
+    int debugMode = 0;
+
     int degrees = 180;
-//    fclose(fopen("scan_result.txt", "w"));
 
     // printing initial header msg
     char init_msg[50];
     sprintf(init_msg, "%-15s %-15s", "Angle (Degrees)", "Distance (cm)");
-//    int x = 0;
-//    while (init_msg[x]) {
-//        cyBot_sendByte(init_msg[x++]);
-//    }
-//    printf("%s\n", init_msg);
     printString(init_msg);
 
     float values[91];
 
     // SCAN 180 DEGREE
-    while (degrees >= 0) {
-        float temp = 0;
-        cyBOT_Scan(degrees, scanPtr);
-        temp += (*scanPtr).sound_dist;
+    if (!debugMode) {
+        while (degrees >= 0) {
+            float temp = 0;
+            cyBOT_Scan(degrees, scanPtr);
+            temp += (*scanPtr).sound_dist;
 
-        cyBOT_Scan(degrees, scanPtr);
-        temp += (*scanPtr).sound_dist;
+            cyBOT_Scan(degrees, scanPtr);
+            temp += (*scanPtr).sound_dist;
 
-        cyBOT_Scan(degrees, scanPtr);
-        temp += (*scanPtr).sound_dist;
+            cyBOT_Scan(degrees, scanPtr);
+            temp += (*scanPtr).sound_dist;
 
-        values[90 - (degrees / 2)] = temp / 3;
-        degrees -= 2;
+            values[90 - (degrees / 2)] = temp / 3;
+            degrees -= 2;
+        }
     }
 
+    // INIT obj array with malloc
     int objCount = 0;
-//    int* objCountptr = &objCount;
     object* ptr = (object*) calloc(25, sizeof(object));
-
-
-    // take average of 5 data points. if current data is outside of threshold,
-    // set data to avg
-//    smooth_data_inplace(values);
-
 
     // PRINTING OUTPUTS TO FILE AND CONSOLE
     int j;
     for (j = 0; j < 91; j++) {
         char msg[50];
 
-        sprintf(msg, "%-15d %-1.2f", (180 - 2*j), values[j]); // change back
-//        sprintf(msg, "%-15d %-1.2f", (180 - 2*j), scan[j]); // change back
+        if (!debugMode) {
+            sprintf(msg, "%-15d %-1.2f", (180 - 2*j), values[j]); // Normal run
+        } else {
+            sprintf(msg, "%-15d %-1.2f", (180 - 2*j), scan[j]); // Debug run
+        }
 
-//        int i = 0;
-//        while (msg[i]) {
-//            cyBot_sendByte(msg[i++]);
-//        }
         printString(msg);
     }
 
-//    countObjects(values, ptr, objCountptr);
-    objCount = count(values, ptr);
-//    objCount = count(scan, ptr);
-
+    if (!debugMode) {
+        objCount = count(values, ptr);
+    } else {
+        objCount = count(scan, ptr);
+    }
 
     int objectIndex;
     char line[50];
@@ -137,27 +154,18 @@ void perform_scan(cyBOT_Scan_t* scanPtr) {
             break;
         }
         char line[50];
-//        sprintf(line, "start: %d, end: %d, dist: %d", ptr[objectIndex].startAngle, ptr[objectIndex].endAngle, ptr[objectIndex].distance);
         sprintf(line, "%-10d %-10d %-10.2f %-10.2d",
                 objectIndex+1,
                 (ptr[objectIndex].endAngle + ptr[objectIndex].startAngle)/2,
                 ptr[objectIndex].distance,
                 ptr[objectIndex].endAngle - ptr[objectIndex].startAngle);
         printString(line);
-//        printf("%s", line);
     }
 
     // PRINTING COUNT TO CONSOLE
     char debug[50];
     sprintf(debug, "\nCount: %d", objCount);
-//    int i = 0;
-//    while (debug[i] != '\0') {
-//        cyBot_sendByte(debug[i++]);
-//    }
     printString(debug);
-    cyBot_sendByte('\r');
-    cyBot_sendByte('\n');
-    printf("%s", debug);
 
 
     face_smallest_object(ptr, objectIndex, scanPtr);
@@ -172,7 +180,7 @@ void face_smallest_object(object* objArray, int size, cyBOT_Scan_t* scanPtr) {
 
     int i;
 
-    int minWidth = 0;
+    int minWidth = 0x7FFFFFFF;
     int minIndex;
     for (i = 0; i < size; i++) {
         int width = objArray[i].endAngle - objArray[i].startAngle;
