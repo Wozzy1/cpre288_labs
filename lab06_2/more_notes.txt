@@ -1,0 +1,24 @@
+steps to do:
+
+Clean data: we want to find where the edges stop
+what might help:
+  flatten noise from empty space
+  
+  
+Object detection:
+  find the correct distance by finding the minimum value between start and end angles
+
+
+int count(float irArray[], float pingArray[], object objArray[]) {
+	
+	// iterate over array
+	
+	// opening condition
+	// if there is a big change from avg(arr[i-2], arr[i-1]
+	
+	// continuing condition
+	// if the values are consistent
+	
+	// ending condition
+
+}

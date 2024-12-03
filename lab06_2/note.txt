@@ -1,0 +1,108 @@
+
+object detection 
+we take 3 arrays: ir, ping, and an empty object arr
+
+loop through all the items in the ir/ping arr 
+with a window of 3 indices at a time ( [-1:1] )
+
+for each triplet of indices:
+  if the difference between a[-1] and a[1] is greater than 10cm
+    we check if a[-1] is bigger than a[1] and if we were already in an object
+	
+	
+//    // add catch for if end-start < 6
+//    while (i < 89) {
+//        float prev = irArray[i-1];
+//        float next = irArray[i+1];
+//        if (abs(prev - next) > 10) {
+//            if (prev - next > 0 && !inObject) {
+//                inObject = 1;
+//                openingAngle = i * 2;
+//            }
+//            else if (prev - next < 0 && inObject) {
+//                inObject = 0;
+//                closingAngle = i * 2;
+//                if (closingAngle - openingAngle >= 6) {
+//                    objArray[objCount].startAngle = openingAngle;
+//                    objArray[objCount].endAngle = closingAngle;
+//
+//                    // ping is more accurate than ir
+//                    objArray[objCount].distance = pingArray[i];
+//                    objCount++;
+//                }
+//            }
+//        }
+//        i++;
+//    }
+//    return objCount;
+
+my liuttle friend
+//    for (i = 1; i < 90; i++) {
+//        float prev = irArray[i - 1];
+//        float curr = irArray[i];
+//        float next = irArray[i + 1];
+//
+//        // checks that difference between previous and next values are more than 10cm
+//        if (fabs(curr - next) > 10.0 && fabs(curr - prev) > 10.0) {
+//            // Opening condition
+//            if ((prev - curr > 0) && !inObject) {
+//                inObject = 1;
+//                openingAngle = i * 2;
+//            }
+//
+//            // closing condition
+//            else if ((curr - next < 0) && inObject) {
+//                closingAngle = i * 2;
+//
+//                // if larger than minimum width of 6 degrees
+//                // if there have at least been 2 consecutive scans
+//                if ((closingAngle - openingAngle >= 6) &&
+//                    (i - openingAngle / 2 >= 2)) {
+//                    objArray[objCount].startAngle = openingAngle;
+//                    objArray[objCount].endAngle = closingAngle;
+//                    // ping is more accurate than ir
+//                    objArray[objCount].distance = pingArray[i];
+//                    objCount++;
+//
+//                }
+//
+//            }
+//        }
+//    }
+//
+//    return objCount;
+
+
+
+//    int objCount = 0;
+//    int i = 1;
+//    int inObject = 0;
+//    int openingAngle = 0;
+//    int closingAngle = 0;
+//
+//    // add catch for if end-start < 6
+//    while (i < 89) {
+//        float prev = irArray[i-1];
+//        float next = irArray[i+1];
+//        if (fabs(prev - next) > 10) {
+//            if (prev - next > 0 && !inObject) {
+//                inObject = 1;
+//                openingAngle = i * 2;
+//            }
+//            else if (prev - next < 0 && inObject) {
+//                inObject = 0;
+//                closingAngle = i * 2;
+//                if ((closingAngle - openingAngle > 4) && (closingAngle - openingAngle <= 600)) {
+//                    objArray[objCount].startAngle = openingAngle;
+////                    objArray[objCount].endAngle = (closingAngle - 6 < 0) ? 0 : (closingAngle - 6);
+//                    objArray[objCount].endAngle = closingAngle;
+//
+//                    // ping is more accurate than ir
+//                    objArray[objCount].distance = pingArray[i]; // should use end - start / 2 index
+//                    objCount++;
+//                }
+//            }
+//        }
+//        i++;
+//    }
+//    return objCount;
